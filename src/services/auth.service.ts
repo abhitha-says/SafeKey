@@ -105,7 +105,7 @@ export async function sendCustomOtp(
   email: string,
   type: 'signup' | 'login' = 'signup'
 ): Promise<{ success: boolean; error?: string }> {
-  const otp = generateOtp();
+  const otp = await generateOtp();
   console.log('[auth] Generated OTP for', email, '— storing...');
 
   // Store OTP in database via RPC

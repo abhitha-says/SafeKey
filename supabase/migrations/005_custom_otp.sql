@@ -72,3 +72,9 @@ BEGIN
   RETURN json_build_object('success', true);
 END;
 $$;
+
+-- ─── Expose RPCs to the API roles ────────────────────────────────────────────
+-- New Supabase projects do NOT auto-expose functions to anon/authenticated;
+-- without these grants the client gets PGRST202 "function not found".
+GRANT EXECUTE ON FUNCTION public.store_otp(text, text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.verify_custom_otp(text, text) TO anon, authenticated;

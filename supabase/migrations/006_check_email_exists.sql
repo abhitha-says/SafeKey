@@ -22,3 +22,7 @@ BEGIN
   );
 END;
 $$;
+
+-- New Supabase projects do NOT auto-expose functions to anon/authenticated;
+-- without this grant the client gets PGRST202 "function not found".
+GRANT EXECUTE ON FUNCTION public.check_email_exists(text) TO anon, authenticated;

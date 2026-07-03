@@ -3,6 +3,8 @@
  * Bypasses Supabase's SMTP relay entirely — sends OTP emails straight through Resend.
  */
 
+import * as Crypto from 'expo-crypto';
+
 const RESEND_API_KEY = process.env.EXPO_PUBLIC_RESEND_API_KEY;
 
 export async function sendOtpEmail(
@@ -95,12 +97,18 @@ export async function sendOtpEmail(
 
 /**
  * Generate a cryptographically random 8-digit OTP.
- * Uses crypto.getRandomValues — NOT Math.random (which is not crypto-safe).
+ * Uses expo-crypto's native CSPRNG — Hermes has no global `crypto`, and
+ * Math.random is not crypto-safe.
+ * Bytes >= 250 are discarded (rejection sampling) so every digit 0-9 is
+ * equally likely — a plain `byte % 10` would bias digits 0-5.
  */
-export function generateOtp(): string {
-  const arr = new Uint8Array(8);
-  crypto.getRandomValues(arr);
-  return Array.from(arr)
-    .map((b) => b % 10)
-    .join('');
+export async function generateOtp(): Promise<string> {
+  let otp = '';
+  while (otp.length < 8) {
+    const bytes = await Crypto.getRandomBytesAsync(16);
+    for (const b of bytes) {
+      if (b < 250 && otp.length < 8) otp += (b % 10).toString();
+    }
+  }
+  return otp;
 }

@@ -1,21 +1,34 @@
 import { Redirect } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/services/supabase';
+import { View, ActivityIndicator } from 'react-native';
+import { useAuth } from '@/hooks/useAuth';
 
+/**
+ * Root index — auth-aware redirect gate.
+ * Unauthenticated → (auth)/login
+ * Authenticated   → (app)/master-password (unlock vault)
+ */
 export default function Index() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { isLoading, isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-    });
-  }, []);
+  // Show a minimal loading state while Supabase resolves the session
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#0A0A0F',
+        }}
+      >
+        <ActivityIndicator size="large" color="#8B5CF6" />
+      </View>
+    );
+  }
 
-  if (isAuthenticated === null) return null; // splash while checking session
+  if (isAuthenticated) {
+    return <Redirect href="/(app)/master-password" />;
+  }
 
-  return isAuthenticated ? (
-    <Redirect href="/(app)/home" />
-  ) : (
-    <Redirect href="/(auth)/login" />
-  );
+  return <Redirect href="/(auth)/login" />;
 }
